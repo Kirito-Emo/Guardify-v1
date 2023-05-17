@@ -6,6 +6,7 @@ import time
 import ssd1306
 import network
 import ujson
+import sys
 from umqtt.simple import MQTTClient
 
 # Pin Definitions
@@ -38,18 +39,20 @@ PASSWORD = '1234'  # Change this to the desired password
 password_attempts = 0
 is_locked = True
 display = None
+led_r = Pin(LED_PIN_R, Pin.OUT)
+led_g = Pin(LED_PIN_G, Pin.OUT)
+led_b = Pin(LED_PIN_B, Pin.OUT)
+buzzer = Pin(BUZZER_PIN, Pin.OUT)
+servo = PWM(Pin(SERVO_PIN))
+user_password = None
 
 def setup():
     # Initialize RGB LED pins
-    led_r = Pin(LED_PIN_R, Pin.OUT)
-    led_g = Pin(LED_PIN_G, Pin.OUT)
-    led_b = Pin(LED_PIN_B, Pin.OUT)
     led_r.off()
     led_g.off()
     led_b.on()
 
     # Initialize buzzer pin
-    buzzer = Pin(BUZZER_PIN, Pin.OUT)
     buzzer.off()
 
     # Initialize OLED display
@@ -61,38 +64,16 @@ def setup():
     display.show()
 
     # Initialize servo
-    servo = PWM(Pin(SERVO_PIN))
     servo.freq(SERVO_FREQ)
     servo.duty(SERVO_ANGLE_LOCKED)
 
-    # Connect to MQTT broker
-    print("Connecting to WiFi", end="")
-    sta_if = network.WLAN(network.STA_IF)
-    sta_if.active(True)
-    sta_if.connect('Wokwi-GUEST', '')
-
-    while not sta_if.isconnected():
-        print(".", end="")
-        time.sleep(0.1)
-    print(" Connected!")
-
-    print("Connecting to MQTT server... ", end="")
-    try:
-        client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
-        client.connect()
-        print("Connected to MQTT broker!")
-        return client
-    except Exception as e:
-        print("Failed to connect to MQTT broker:", str(e))
-        return None
-
-    return led_r, led_g, led_b, buzzer, servo, client
+    return led_r, led_g, led_b, buzzer, servo
 
 def unlock_vault():
     # Print the message for successful unlocking
-    # Display a warning message on the OLED display
     display.fill(0)  # Clear the display
-    display.text("Cassaforte sbloccata.")
+    display.text('Cassaforte ', 22, 20)
+    display.text('sbloccata.', 25, 30)
     display.show()
 
     # Turn off the blue led
@@ -105,14 +86,15 @@ def unlock_vault():
     servo.duty(SERVO_ANGLE_UNLOCKED)
 
     # Emit a sound
-    tone(BUZZER_PIN, 1000, 500)  # Plays 1000Hz tone for 500ms
+    #buzzer.tone(BUZZER_PIN, 1000, 500)  # Plays 1000Hz tone for 500ms
+    buzzer.on()
 
 def trigger_alarm():
     # Display a warning message on the OLED display
     display.fill(0)  # Clear the display
-    display.text('ATTENZIONE!', 30, 10)
-    display.text('Intrusione', 35, 30)
-    display.text('rilevata', 40, 40)
+    display.text('ATTENZIONE!', 25, 10)
+    display.text('Intrusione', 25, 30)
+    display.text('rilevata', 30, 40)
     display.show()
 
     # Turn off the blue led
@@ -122,7 +104,8 @@ def trigger_alarm():
     led_r.on()
 
     # Emit a sound
-    tone(BUZZER_PIN, 262, 3000) # Plays 262Hz tone for 3 seconds
+    #buzzer.tone(BUZZER_PIN, 262, 3000) # Plays 262Hz tone for 3 seconds
+    buzzer.on()
 
     # Publish the alert message via MQTT
     client.publish(MQTT_TOPIC, "ATTENZIONE! Cassaforte a rischio! Intrusione rilevata!")
@@ -144,33 +127,43 @@ def wrong_password():
     led_b.on()
 
     # Emit a sound for a wrong try
-    tone(BUZZER_PIN, 500, 500)  # Plays 500Hz tone for 500ms
+    #buzzer.tone(BUZZER_PIN, 500, 500)  # Plays 500Hz tone for 500ms
+    buzzer.on()
 
-def check_password():
-    global password_attempts, is_locked
+setup()
 
-    # Prompt the user to enter the PIN
-    user_password = input("Enter the PIN: ")
+# Connect to MQTT broker
+print("Connecting to WiFi", end="")
+sta_if = network.WLAN(network.STA_IF)
+sta_if.active(True)
+sta_if.connect('Wokwi-GUEST', '')
 
-    if not user_password:
-        print("No PIN entered!")
-        return False
+while not sta_if.isconnected():
+    print(".", end="")
+    time.sleep(0.1)
+print(" Connected!")
 
-    elif user_password == PASSWORD:
+print("Connecting to MQTT server... ", end="")
+try:
+    client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
+    client.connect()
+    print("Connected to MQTT broker!")
+except Exception as ex:
+    print("Failed to connect to MQTT broker:", str(ex))
+
+while (user_password is not PASSWORD) and (password_attempts <= 3):
+    user_password = input("Enter the PIN: ")    # Prompt the user to enter the PIN
+
+    if user_password is PASSWORD:
+        unlock_vault()
         password_attempts = 0
         is_locked = False
-        unlock_vault()
-        return True
-
     else:
         password_attempts += 1
         
         if password_attempts >= 3:
             wrong_password()
             trigger_alarm()
+            sys.exit()
         else:
             wrong_password()
-        return False
-
-setup()
-check_password()
