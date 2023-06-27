@@ -1,4 +1,6 @@
-# IoT-Project
+# Guardify v1
+___
+## IoT-Project
 
 This repo is intended to contain the files of a home automation project developed in Micropython on ESP32.
 
