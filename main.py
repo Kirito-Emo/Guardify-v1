@@ -35,6 +35,11 @@ MQTT_TOPIC = "alert-push"               # MQTT topic to publish the alert messag
 # Password configuration
 PASSWORD = '1234'  # Change this to the desired password
 
+# Buzzer Configuration
+BUZZER_FREQ_WRONG = 500  # Frequency for wrong password
+BUZZER_FREQ_ALARM = 1000  # Frequency for alarm
+BUZZER_FREQ_SUCCESS = 100  # Frequency for successful unlock
+
 # Global Variables
 password_attempts = 0
 is_locked = True
@@ -42,7 +47,7 @@ display = None
 led_r = Pin(LED_PIN_R, Pin.OUT)
 led_g = Pin(LED_PIN_G, Pin.OUT)
 led_b = Pin(LED_PIN_B, Pin.OUT)
-buzzer = Pin(BUZZER_PIN, Pin.OUT)
+buzzer = PWM(Pin(BUZZER_PIN), freq=BUZZER_FREQ_WRONG, duty=0)
 servo = PWM(Pin(SERVO_PIN))
 user_password = None
 
@@ -53,14 +58,13 @@ def setup():
     led_b.on()
 
     # Initialize buzzer pin
-    buzzer.off()
+    buzzer.duty(0)
 
     # Initialize OLED display
     i2c = SoftI2C(scl=Pin(I2C_SCL_PIN), sda=Pin(I2C_SDA_PIN))
     global display
     display = ssd1306.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, i2c)
-    display.text('Vault locked!', 12, 10)
-    display.text('Insert pin: ', 20, 20)    
+    display.text('Vault locked!', 20, 10)
     display.show()
 
     # Initialize servo
@@ -69,11 +73,17 @@ def setup():
 
     return led_r, led_g, led_b, buzzer, servo
 
+def buzz(freq, duration):
+    buzzer.freq(freq)  # Change the frequency
+    buzzer.duty(512)  # Start the buzzer
+    time.sleep(duration)
+    buzzer.duty(0)  # Stop the buzzer
+
 def unlock_vault():
     # Print the message for successful unlocking
-    display.fill(0)  # Clear the display
-    display.text('Cassaforte ', 22, 20)
-    display.text('sbloccata.', 25, 30)
+    display.fill(0)
+    display.text('Vault', 25, 10)
+    display.text('Unlocked.', 25, 30)
     display.show()
 
     # Turn off the blue led
@@ -86,15 +96,14 @@ def unlock_vault():
     servo.duty(SERVO_ANGLE_UNLOCKED)
 
     # Emit a sound
-    #buzzer.tone(BUZZER_PIN, 1000, 500)  # Plays 1000Hz tone for 500ms
-    buzzer.on()
+    buzz(BUZZER_FREQ_SUCCESS, 0.5)
 
 def trigger_alarm():
     # Display a warning message on the OLED display
-    display.fill(0)  # Clear the display
-    display.text('ATTENZIONE!', 25, 10)
-    display.text('Intrusione', 25, 30)
-    display.text('rilevata', 30, 40)
+    display.fill(0)
+    display.text('WARNING!', 20, 10)
+    display.text('Intrusion', 25, 30)
+    display.text('detected', 30, 40)
     display.show()
 
     # Turn off the blue led
@@ -104,16 +113,15 @@ def trigger_alarm():
     led_r.on()
 
     # Emit a sound
-    #buzzer.tone(BUZZER_PIN, 262, 3000) # Plays 262Hz tone for 3 seconds
-    buzzer.on()
+    buzz(BUZZER_FREQ_ALARM, 3)
 
     # Publish the alert message via MQTT
-    client.publish(MQTT_TOPIC, "ATTENZIONE! Cassaforte a rischio! Intrusione rilevata!")
+    client.publish(MQTT_TOPIC, "WARNING! Intrusion detected!")
 
 def wrong_password():
     # Display a message of wrong PIN on the OLED display
-    display.fill(0)  # Clear the display
-    display.text('Pin errato!', 20, 10)
+    display.fill(0)
+    display.text('Wrong PIN!', 20, 10)
     display.show()
 
     # Activate the red LED
@@ -127,34 +135,70 @@ def wrong_password():
     led_b.on()
 
     # Emit a sound for a wrong try
-    #buzzer.tone(BUZZER_PIN, 500, 500)  # Plays 500Hz tone for 500ms
-    buzzer.on()
+    buzz(BUZZER_FREQ_WRONG, 1)
+
+    if password_attempts < 3:
+        # Prompt for password input
+        display.fill(0)
+        display.text('Insert PIN:', 20, 20)
+        display.show()
 
 setup()
 
 # Connect to MQTT broker
+display.fill(0)
+display.text('Connecting to', 0, 0)
+display.text('WiFi...', 0, 10)
+display.show()
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
 sta_if.connect('Wokwi-GUEST', '')
 
 while not sta_if.isconnected():
+    display.fill(0)
+    display.text('Connecting.', 0, 0)
+    display.show()
     print(".", end="")
     time.sleep(0.1)
+
+display.fill(0)
+display.text('WiFi Connected!', 0, 0)
+display.show()
 print(" Connected!")
 
 print("Connecting to MQTT server... ", end="")
+
+display.fill(0)
+display.text('Connecting to', 0, 0)
+display.text('MQTT server...', 0, 10)
+display.show()
+
 try:
     client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
     client.connect()
+    display.fill(0)
+    display.text('MQTT Connected!', 0, 0)
+    display.show()
     print("Connected to MQTT broker!")
 except Exception as ex:
+    display.fill(0)
+    display.text('Failed to', 0, 0)
+    display.text('connect to MQTT', 0, 10)
+    display.text('broker:', 0, 20)
+    display.text(str(ex), 0, 30)
+    display.show()
     print("Failed to connect to MQTT broker:", str(ex))
 
-while (user_password is not PASSWORD) and (password_attempts <= 3):
-    user_password = input("Enter the PIN: ")    # Prompt the user to enter the PIN
+# Prompt for password input
+display.fill(0)
+display.text('Insert PIN:', 20, 20)
+display.show()
 
-    if user_password is PASSWORD:
+while (user_password != PASSWORD) and (password_attempts <= 3):
+    user_password = input("Insert PIN: ")    # Prompt the user to enter the PIN
+
+    if user_password == PASSWORD:
         unlock_vault()
         password_attempts = 0
         is_locked = False
