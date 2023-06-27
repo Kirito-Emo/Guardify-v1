@@ -24,8 +24,8 @@ DISPLAY_HEIGHT = 64  # OLED display height in pixels
 
 # Servo Configuration
 SERVO_FREQ = 50             # Servo motor frequency in Hz
-SERVO_ANGLE_UNLOCKED = 90   # Servo angle for unlocked state
-SERVO_ANGLE_LOCKED = 180    # Servo angle for locked state
+SERVO_ANGLE_UNLOCKED = 126  # Servo angle for unlocked state
+SERVO_ANGLE_LOCKED = 26   # Servo angle for locked state
 
 # MQTT Configuration
 MQTT_CLIENT_ID = "Guardify"             # MQTT client ID
@@ -36,9 +36,9 @@ MQTT_TOPIC = "alert-push"               # MQTT topic to publish the alert messag
 PASSWORD = '1234'  # Change this to the desired password
 
 # Buzzer Configuration
-BUZZER_FREQ_WRONG = 500  # Frequency for wrong password
+BUZZER_FREQ_WRONG = 100  # Frequency for wrong password
 BUZZER_FREQ_ALARM = 1000  # Frequency for alarm
-BUZZER_FREQ_SUCCESS = 100  # Frequency for successful unlock
+BUZZER_FREQ_SUCCESS = 500  # Frequency for successful unlock
 
 # Global Variables
 password_attempts = 0
@@ -96,7 +96,7 @@ def unlock_vault():
     servo.duty(SERVO_ANGLE_UNLOCKED)
 
     # Emit a sound
-    buzz(BUZZER_FREQ_SUCCESS, 0.5)
+    buzz(BUZZER_FREQ_SUCCESS, 1)
 
 def trigger_alarm():
     # Display a warning message on the OLED display
@@ -135,7 +135,7 @@ def wrong_password():
     led_b.on()
 
     # Emit a sound for a wrong try
-    buzz(BUZZER_FREQ_WRONG, 1)
+    buzz(BUZZER_FREQ_WRONG, 0.5)
 
     if password_attempts < 3:
         # Prompt for password input
@@ -153,14 +153,14 @@ display.show()
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
-sta_if.connect('Wokwi-GUEST', '')
+sta_if.connect('ReteGab', 'Spassw0rg')
 
 while not sta_if.isconnected():
     display.fill(0)
     display.text('Connecting.', 0, 0)
     display.show()
     print(".", end="")
-    time.sleep(0.1)
+    time.sleep(1)
 
 display.fill(0)
 display.text('WiFi Connected!', 0, 0)
@@ -168,7 +168,6 @@ display.show()
 print(" Connected!")
 
 print("Connecting to MQTT server... ", end="")
-
 display.fill(0)
 display.text('Connecting to', 0, 0)
 display.text('MQTT server...', 0, 10)
