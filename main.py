@@ -6,7 +6,6 @@ import time
 import ssd1306
 import network
 import ujson
-import sys
 from umqtt.simple import MQTTClient
 
 # Pin Definitions
@@ -30,10 +29,10 @@ SERVO_ANGLE_LOCKED = 26   # Servo angle for locked state
 # MQTT Configuration
 MQTT_CLIENT_ID = "Guardify"             # MQTT client ID
 MQTT_BROKER = 'test.mosquitto.org'      # MQTT broker address
-MQTT_TOPIC = "alert-push"               # MQTT topic to publish the alert message
+MQTT_TOPIC = b'alert-push'               # MQTT topic to publish the alert message
 
 # Password configuration
-PASSWORD = '1234'  # Change this to the desired password
+PASSWORD = b'1234'  # Change this to the desired password
 
 # Buzzer Configuration
 BUZZER_FREQ_WRONG = 100  # Frequency for wrong password
@@ -99,6 +98,8 @@ def unlock_vault():
     buzz(BUZZER_FREQ_SUCCESS, 1)
 
 def trigger_alarm():
+    global MQTT_TOPIC
+
     # Display a warning message on the OLED display
     display.fill(0)
     display.text('WARNING!', 20, 10)
@@ -142,8 +143,31 @@ def wrong_password():
         display.fill(0)
         display.text('Insert PIN:', 20, 20)
         display.show()
+        time.sleep(2)
 
 setup()
+
+# Callback function to use when a msg is received from the broker
+def subCallback(topic, msg):
+    global user_password, password_attempts
+
+    print(topic, msg)
+    
+    if(topic == MQTT_TOPIC):
+        user_password = msg
+        print(user_password)
+
+        if(user_password == PASSWORD):
+            unlock_vault()
+            password_attempts = 0
+            is_locked = False
+        else:
+            password_attempts += 1
+            if password_attempts >= 3:
+                wrong_password()
+                trigger_alarm()
+            else:
+                wrong_password()
 
 # Connect to MQTT broker
 display.fill(0)
@@ -153,7 +177,7 @@ display.show()
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
-sta_if.connect('ReteGab', 'Spassw0rg')
+sta_if.connect('Wokwi-GUEST', '')
 
 while not sta_if.isconnected():
     display.fill(0)
@@ -175,7 +199,10 @@ display.show()
 
 try:
     client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
+    client.set_callback(subCallback)
     client.connect()
+    client.subscribe(MQTT_TOPIC)
+
     display.fill(0)
     display.text('MQTT Connected!', 0, 0)
     display.show()
@@ -194,19 +221,5 @@ display.fill(0)
 display.text('Insert PIN:', 20, 20)
 display.show()
 
-while (user_password != PASSWORD) and (password_attempts <= 3):
-    user_password = input("Insert PIN: ")    # Prompt the user to enter the PIN
-
-    if user_password == PASSWORD:
-        unlock_vault()
-        password_attempts = 0
-        is_locked = False
-    else:
-        password_attempts += 1
-        
-        if password_attempts >= 3:
-            wrong_password()
-            trigger_alarm()
-            sys.exit()
-        else:
-            wrong_password()
+while True:
+    client.check_msg()
