@@ -91,8 +91,10 @@ def unlock_vault():
     # Turn on the green led
     led_g.on()
 
-    # Move the servo to open the door (90° degrees)
-    servo.duty(SERVO_ANGLE_UNLOCKED)
+    # Move the servo to open the door gradually
+    for angle in range(SERVO_ANGLE_LOCKED, SERVO_ANGLE_UNLOCKED):
+        servo.duty(angle)
+        time.sleep(0.1)  # Pause briefly to allow the servo to move
 
     # Emit a sound
     buzz(BUZZER_FREQ_SUCCESS, 1)
@@ -116,6 +118,13 @@ def trigger_alarm():
     # Emit a sound
     buzz(BUZZER_FREQ_ALARM, 3)
 
+    # Delay for a certain period of time (e.g., 2 seconds)
+    time.sleep(2)
+
+    # Return to the blue LED
+    led_r.off()
+    led_b.on()
+
     # Publish the alert message via MQTT
     client.publish(MQTT_TOPIC, "WARNING! Intrusion detected!")
 
@@ -128,15 +137,19 @@ def wrong_password():
     # Activate the red LED
     led_r.on()
 
-    # Delay for a certain period of time (e.g., 1 second)
-    time.sleep(1)
-
-    # Return to the blue LED
-    led_r.off()
-    led_b.on()
+    # Turn off the blue LED
+    led_b.off()
 
     # Emit a sound for a wrong try
     buzz(BUZZER_FREQ_WRONG, 0.5)
+
+    # Delay for a certain period of time (e.g., 1 second)
+    time.sleep(2)
+
+    # Return to the blue LED
+    led_r.off()
+    buzzer.duty(0)  # Stop the buzzer
+    led_b.on()
 
     if password_attempts < 3:
         # Prompt for password input
@@ -174,6 +187,8 @@ display.fill(0)
 display.text('Connecting to', 0, 0)
 display.text('WiFi...', 0, 10)
 display.show()
+time.sleep(1)
+
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
@@ -189,6 +204,7 @@ while not sta_if.isconnected():
 display.fill(0)
 display.text('WiFi Connected!', 0, 0)
 display.show()
+time.sleep(1)
 print(" Connected!")
 
 print("Connecting to MQTT server... ", end="")
@@ -196,6 +212,7 @@ display.fill(0)
 display.text('Connecting to', 0, 0)
 display.text('MQTT server...', 0, 10)
 display.show()
+time.sleep(1)
 
 try:
     client = MQTTClient(MQTT_CLIENT_ID, MQTT_BROKER)
@@ -206,6 +223,7 @@ try:
     display.fill(0)
     display.text('MQTT Connected!', 0, 0)
     display.show()
+    time.sleep(1)
     print("Connected to MQTT broker!")
 except Exception as ex:
     display.fill(0)
@@ -214,6 +232,7 @@ except Exception as ex:
     display.text('broker:', 0, 20)
     display.text(str(ex), 0, 30)
     display.show()
+    time.sleep(1)
     print("Failed to connect to MQTT broker:", str(ex))
 
 # Prompt for password input
