@@ -198,6 +198,7 @@ while not sta_if.isconnected():
     display.fill(0)
     display.text('Connecting.', 0, 0)
     display.show()
+    time.sleep(1)
     print(".", end="")
     time.sleep(1)
 
