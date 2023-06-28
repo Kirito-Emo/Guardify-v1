@@ -192,7 +192,7 @@ time.sleep(1)
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
-sta_if.connect('Wokwi-GUEST', '')
+sta_if.connect('Emo', 'pazzurdoFra9')
 
 while not sta_if.isconnected():
     display.fill(0)
