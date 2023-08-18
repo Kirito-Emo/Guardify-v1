@@ -23,8 +23,8 @@ DISPLAY_HEIGHT = 64  # OLED display height in pixels
 
 # Servo Configuration
 SERVO_FREQ = 50             # Servo motor frequency in Hz
-SERVO_ANGLE_UNLOCKED = 126  # Servo angle for unlocked state
-SERVO_ANGLE_LOCKED = 26   # Servo angle for locked state
+SERVO_ANGLE_UNLOCKED = 246  # Servo angle for unlocked state
+SERVO_ANGLE_LOCKED = 84   # Servo angle for locked state
 
 # MQTT Configuration
 MQTT_CLIENT_ID = "Guardify"             # MQTT client ID
@@ -109,11 +109,11 @@ def trigger_alarm():
     display.text('detected', 30, 40)
     display.show()
 
-    # Turn off the blue led
-    led_b.off()
-
     # Turn on the red led
     led_r.on()
+
+    # Turn off the blue led
+    led_b.off()
 
     # Emit a sound
     buzz(BUZZER_FREQ_ALARM, 3)
@@ -156,7 +156,6 @@ def wrong_password():
         display.fill(0)
         display.text('Insert PIN:', 20, 20)
         display.show()
-        time.sleep(2)
 
 setup()
 
@@ -188,11 +187,10 @@ display.text('Connecting to', 0, 0)
 display.text('WiFi...', 0, 10)
 display.show()
 time.sleep(1)
-
 print("Connecting to WiFi", end="")
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
-sta_if.connect('Emo', 'pazzurdoFra9')
+sta_if.connect('Wokwi-GUEST', '')
 
 while not sta_if.isconnected():
     display.fill(0)
