@@ -8,6 +8,24 @@
         "env": []
     },
     {
+        "id": "bf12bd9346602b68",
+        "type": "mqtt out",
+        "z": "1004466e7ba2055a",
+        "name": "",
+        "topic": "alert-push",
+        "qos": "2",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "b4be68a9c65618b0",
+        "x": 720,
+        "y": 440,
+        "wires": []
+    },
+    {
         "id": "4bdb3d4d863fa34d",
         "type": "mqtt in",
         "z": "1004466e7ba2055a",
@@ -20,11 +38,12 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 380,
-        "y": 220,
+        "x": 440,
+        "y": 280,
         "wires": [
             [
-                "0a178faccda68d74"
+                "0a178faccda68d74",
+                "39602907af7d37e9"
             ]
         ]
     },
@@ -41,53 +60,76 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 650,
-        "y": 220,
+        "x": 710,
+        "y": 280,
         "wires": []
     },
     {
-        "id": "6e58806e1af1ad44",
-        "type": "ui_text_input",
+        "id": "c622353743d6c5ef",
+        "type": "ui_template",
         "z": "1004466e7ba2055a",
-        "name": "",
-        "label": "PIN:",
-        "tooltip": "",
         "group": "098a3a19bc8b58c1",
-        "order": 0,
+        "name": "Keypad",
+        "order": 1,
         "width": 0,
         "height": 0,
-        "passthru": true,
-        "mode": "password",
-        "delay": "0",
-        "topic": "payload",
-        "sendOnBlur": false,
+        "format": "<div id='keypad'>\n  <input type='text' id='display' disabled/>\n  <div id='buttons'>\n    <button class='num-button'>1</button>\n    <button class='num-button'>2</button>\n    <button class='num-button'>3</button>\n    <button class='num-button'>4</button>\n    <button class='num-button'>5</button>\n    <button class='num-button'>6</button>\n    <button class='num-button'>7</button>\n    <button class='num-button'>8</button>\n    <button class='num-button'>9</button>\n    <button id='delete'>Delete</button>\n    <button class='num-button'>0</button>\n    <button id='confirm'>Confirm</button>\n  </div>\n</div>\n\n<style>\n  #keypad {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  #display {\n    width: 200px;\n    height: 40px;\n    margin-bottom: 10px;\n  }\n  #buttons {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 10px;\n  }\n  .num-button, #delete, #confirm {\n    width: 80px;\n    height: 80px;\n    border-radius: 50%;\n  }\n  #delete, #confirm {\n    border-radius: 0%;\n  }\n</style>\n\n<script>\n  $(function() {\n    $('.num-button').click(function() {\n      $('#display').val($('#display').val() + $(this).text());\n    });\n    $('#delete').click(function() {\n      $('#display').val($('#display').val().slice(0, -1));\n    });\n    $('#confirm').click(function() {\n      scope.send({payload: $('#display').val()});\n      $('#display').val('');\n    });\n  });\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
         "className": "",
-        "topicType": "msg",
-        "x": 390,
-        "y": 380,
+        "x": 420,
+        "y": 440,
         "wires": [
             [
-                "977259969ecaa534"
+                "bf12bd9346602b68"
             ]
         ]
     },
     {
-        "id": "977259969ecaa534",
-        "type": "mqtt out",
+        "id": "782db7dbb718cea7",
+        "type": "e-mail in",
         "z": "1004466e7ba2055a",
         "name": "",
-        "topic": "alert-push",
-        "qos": "1",
-        "retain": "",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "c636c53df857230f",
-        "x": 660,
-        "y": 380,
-        "wires": []
+        "protocol": "IMAP",
+        "server": "imap.gmail.com",
+        "useSSL": true,
+        "autotls": "required",
+        "port": "993",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "box": "INBOX",
+        "disposition": "Read",
+        "criteria": "UNSEEN",
+        "repeat": "300",
+        "fetch": "trigger",
+        "inputs": 1,
+        "x": 990,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "39602907af7d37e9",
+        "type": "function",
+        "z": "1004466e7ba2055a",
+        "name": "check_tentativi",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 200,
+        "wires": [
+            [
+                "782db7dbb718cea7"
+            ]
+        ]
     },
     {
         "id": "b4be68a9c65618b0",
@@ -126,33 +168,6 @@
         "width": "6",
         "collapse": false,
         "className": ""
-    },
-    {
-        "id": "c636c53df857230f",
-        "type": "mqtt-broker",
-        "name": "",
-        "broker": "https://test.mosquitto.org/",
-        "port": "1883",
-        "clientid": "",
-        "autoConnect": true,
-        "usetls": false,
-        "protocolVersion": "4",
-        "keepalive": "60",
-        "cleansession": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
     },
     {
         "id": "1e9a24336cb28c8c",
