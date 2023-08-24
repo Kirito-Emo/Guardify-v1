@@ -239,5 +239,5 @@ display.fill(0)
 display.text('Insert PIN:', 20, 20)
 display.show()
 
-while True:
+while password_attempts < 3:
     client.check_msg()

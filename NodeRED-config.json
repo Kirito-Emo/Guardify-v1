@@ -1,6 +1,6 @@
 [
     {
-        "id": "1004466e7ba2055a",
+        "id": "3f28c634ba510fe6",
         "type": "tab",
         "label": "Flow 1",
         "disabled": false,
@@ -8,49 +8,30 @@
         "env": []
     },
     {
-        "id": "bf12bd9346602b68",
-        "type": "mqtt out",
-        "z": "1004466e7ba2055a",
-        "name": "",
-        "topic": "alert-push",
-        "qos": "2",
-        "retain": "false",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "b4be68a9c65618b0",
-        "x": 720,
-        "y": 440,
-        "wires": []
-    },
-    {
-        "id": "4bdb3d4d863fa34d",
+        "id": "184d1e62f95008f0",
         "type": "mqtt in",
-        "z": "1004466e7ba2055a",
+        "z": "3f28c634ba510fe6",
         "name": "",
         "topic": "alert-push",
         "qos": "1",
         "datatype": "auto-detect",
-        "broker": "b4be68a9c65618b0",
+        "broker": "c636c53df857230f",
         "nl": false,
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 440,
-        "y": 280,
+        "x": 380,
+        "y": 220,
         "wires": [
             [
-                "0a178faccda68d74",
-                "39602907af7d37e9"
+                "aabc9ce5d46e3f54"
             ]
         ]
     },
     {
-        "id": "0a178faccda68d74",
+        "id": "aabc9ce5d46e3f54",
         "type": "debug",
-        "z": "1004466e7ba2055a",
+        "z": "3f28c634ba510fe6",
         "name": "pin-ver",
         "active": true,
         "tosidebar": true,
@@ -60,84 +41,88 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 710,
-        "y": 280,
+        "x": 650,
+        "y": 220,
         "wires": []
     },
     {
-        "id": "c622353743d6c5ef",
-        "type": "ui_template",
-        "z": "1004466e7ba2055a",
+        "id": "3a47a33468c9d521",
+        "type": "mqtt out",
+        "z": "3f28c634ba510fe6",
+        "name": "",
+        "topic": "alert-push",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c636c53df857230f",
+        "x": 660,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "8dda61e78407467e",
+        "type": "ui_text_input",
+        "z": "3f28c634ba510fe6",
+        "name": "",
+        "label": "PIN:",
+        "tooltip": "",
         "group": "098a3a19bc8b58c1",
-        "name": "Keypad",
-        "order": 1,
+        "order": 0,
         "width": 0,
         "height": 0,
-        "format": "<div id='keypad'>\n  <input type='text' id='display' disabled/>\n  <div id='buttons'>\n    <button class='num-button'>1</button>\n    <button class='num-button'>2</button>\n    <button class='num-button'>3</button>\n    <button class='num-button'>4</button>\n    <button class='num-button'>5</button>\n    <button class='num-button'>6</button>\n    <button class='num-button'>7</button>\n    <button class='num-button'>8</button>\n    <button class='num-button'>9</button>\n    <button id='delete'>Delete</button>\n    <button class='num-button'>0</button>\n    <button id='confirm'>Confirm</button>\n  </div>\n</div>\n\n<style>\n  #keypad {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  #display {\n    width: 200px;\n    height: 40px;\n    margin-bottom: 10px;\n  }\n  #buttons {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 10px;\n  }\n  .num-button, #delete, #confirm {\n    width: 80px;\n    height: 80px;\n    border-radius: 50%;\n  }\n  #delete, #confirm {\n    border-radius: 0%;\n  }\n</style>\n\n<script>\n  $(function() {\n    $('.num-button').click(function() {\n      $('#display').val($('#display').val() + $(this).text());\n    });\n    $('#delete').click(function() {\n      $('#display').val($('#display').val().slice(0, -1));\n    });\n    $('#confirm').click(function() {\n      scope.send({payload: $('#display').val()});\n      $('#display').val('');\n    });\n  });\n</script>",
-        "storeOutMessages": true,
-        "fwdInMessages": true,
-        "resendOnRefresh": true,
-        "templateScope": "local",
+        "passthru": true,
+        "mode": "password",
+        "delay": "0",
+        "topic": "payload",
+        "sendOnBlur": false,
         "className": "",
-        "x": 420,
-        "y": 440,
+        "topicType": "msg",
+        "x": 390,
+        "y": 380,
         "wires": [
             [
-                "bf12bd9346602b68"
+                "e85bfef1d933e6bc",
+                "3a47a33468c9d521"
             ]
         ]
     },
     {
-        "id": "782db7dbb718cea7",
-        "type": "e-mail in",
-        "z": "1004466e7ba2055a",
-        "name": "",
-        "protocol": "IMAP",
-        "server": "imap.gmail.com",
-        "useSSL": true,
-        "autotls": "required",
-        "port": "993",
-        "authtype": "BASIC",
-        "saslformat": true,
-        "token": "oauth2Response.access_token",
-        "box": "INBOX",
-        "disposition": "Read",
-        "criteria": "UNSEEN",
-        "repeat": "300",
-        "fetch": "trigger",
-        "inputs": 1,
-        "x": 990,
-        "y": 200,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "39602907af7d37e9",
-        "type": "function",
-        "z": "1004466e7ba2055a",
-        "name": "check_tentativi",
-        "func": "\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 740,
-        "y": 200,
+        "id": "e85bfef1d933e6bc",
+        "type": "change",
+        "z": "3f28c634ba510fe6",
+        "name": "Clear PIN Field",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "reg": false,
+        "x": 390,
+        "y": 460,
         "wires": [
             [
-                "782db7dbb718cea7"
+                "8dda61e78407467e"
             ]
         ]
     },
     {
-        "id": "b4be68a9c65618b0",
+        "id": "c636c53df857230f",
         "type": "mqtt-broker",
-        "name": "mosquitto",
-        "broker": "test.mosquitto.org",
+        "name": "",
+        "broker": "https://test.mosquitto.org/",
         "port": "1883",
-        "clientid": "Guardify",
+        "clientid": "",
         "autoConnect": true,
         "usetls": false,
         "protocolVersion": "4",
