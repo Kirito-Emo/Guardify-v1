@@ -24,19 +24,19 @@ DISPLAY_HEIGHT = 64  # OLED display height in pixels
 # Servo Configuration
 SERVO_FREQ = 50             # Servo motor frequency in Hz
 SERVO_ANGLE_UNLOCKED = 246  # Servo angle for unlocked state
-SERVO_ANGLE_LOCKED = 84   # Servo angle for locked state
+SERVO_ANGLE_LOCKED = 84     # Servo angle for locked state
 
 # MQTT Configuration
 MQTT_CLIENT_ID = "Guardify"             # MQTT client ID
 MQTT_BROKER = 'test.mosquitto.org'      # MQTT broker address
-MQTT_TOPIC = b'alert-push'               # MQTT topic to publish the alert message
+MQTT_TOPIC = b'alert-push'              # MQTT topic to publish the alert message
 
 # Password configuration
 PASSWORD = b'1234'  # Change this to the desired password
 
 # Buzzer Configuration
-BUZZER_FREQ_WRONG = 100  # Frequency for wrong password
-BUZZER_FREQ_ALARM = 1000  # Frequency for alarm
+BUZZER_FREQ_WRONG = 100    # Frequency for wrong password
+BUZZER_FREQ_ALARM = 1000   # Frequency for alarm
 BUZZER_FREQ_SUCCESS = 500  # Frequency for successful unlock
 
 # Global Variables
@@ -88,16 +88,41 @@ def unlock_vault():
     # Turn off the blue led
     led_b.off()
 
-    # Turn on the green led
+    # Turn on the green led and buzz at the same time
     led_g.on()
+    buzz(BUZZER_FREQ_SUCCESS, 1)  # Moved this up to sound with the green light
 
     # Move the servo to open the door gradually
     for angle in range(SERVO_ANGLE_LOCKED, SERVO_ANGLE_UNLOCKED):
         servo.duty(angle)
         time.sleep(0.1)  # Pause briefly to allow the servo to move
+    
+    # Lock the vault automatically
+    lock_vault()
+    
+def lock_vault():
+    # Move the servo to close the door gradually
+    for angle in range(SERVO_ANGLE_UNLOCKED, SERVO_ANGLE_LOCKED, -1):
+        servo.duty(angle)
+        time.sleep(0.1)  # Pause briefly to allow the servo to move
 
-    # Emit a sound
-    buzz(BUZZER_FREQ_SUCCESS, 1)
+    # Display message and LEDs after door closure
+    # Print the message for locking
+    display.fill(0)
+    display.text('Vault locked!', 20, 10)
+    display.show()
+
+    # Turn off the green led
+    led_g.off()
+
+    # Turn on the blue led
+    led_b.on()
+
+    # Emit a sound (optional, or use another frequency to indicate lock)
+    buzz(BUZZER_FREQ_WRONG, 1)
+
+    global is_locked
+    is_locked = True
 
 def trigger_alarm():
     global MQTT_TOPIC
