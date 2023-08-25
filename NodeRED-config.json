@@ -1,6 +1,6 @@
 [
     {
-        "id": "3f28c634ba510fe6",
+        "id": "221e456ae0c76a9c",
         "type": "tab",
         "label": "Flow 1",
         "disabled": false,
@@ -8,9 +8,9 @@
         "env": []
     },
     {
-        "id": "184d1e62f95008f0",
+        "id": "da0c00d91277719e",
         "type": "mqtt in",
-        "z": "3f28c634ba510fe6",
+        "z": "221e456ae0c76a9c",
         "name": "",
         "topic": "alert-push",
         "qos": "1",
@@ -20,18 +20,18 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 380,
-        "y": 220,
+        "x": 100,
+        "y": 200,
         "wires": [
             [
-                "aabc9ce5d46e3f54"
+                "a57a1f308ec3d8d4"
             ]
         ]
     },
     {
-        "id": "aabc9ce5d46e3f54",
+        "id": "a57a1f308ec3d8d4",
         "type": "debug",
-        "z": "3f28c634ba510fe6",
+        "z": "221e456ae0c76a9c",
         "name": "pin-ver",
         "active": true,
         "tosidebar": true,
@@ -41,14 +41,14 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 650,
-        "y": 220,
+        "x": 290,
+        "y": 200,
         "wires": []
     },
     {
-        "id": "3a47a33468c9d521",
+        "id": "ddf86a0d149366b8",
         "type": "mqtt out",
-        "z": "3f28c634ba510fe6",
+        "z": "221e456ae0c76a9c",
         "name": "",
         "topic": "alert-push",
         "qos": "1",
@@ -59,14 +59,14 @@
         "correl": "",
         "expiry": "",
         "broker": "c636c53df857230f",
-        "x": 660,
-        "y": 380,
+        "x": 300,
+        "y": 620,
         "wires": []
     },
     {
-        "id": "8dda61e78407467e",
+        "id": "b87f5258bd863929",
         "type": "ui_text_input",
-        "z": "3f28c634ba510fe6",
+        "z": "221e456ae0c76a9c",
         "name": "",
         "label": "PIN:",
         "tooltip": "",
@@ -81,38 +81,212 @@
         "sendOnBlur": false,
         "className": "",
         "topicType": "msg",
-        "x": 390,
-        "y": 380,
+        "x": 90,
+        "y": 620,
         "wires": [
             [
-                "e85bfef1d933e6bc",
-                "3a47a33468c9d521"
+                "ddf86a0d149366b8",
+                "d4e865a7a232a7e9"
             ]
         ]
     },
     {
-        "id": "e85bfef1d933e6bc",
+        "id": "c1ab3cc10e1031b3",
+        "type": "e-mail",
+        "z": "221e456ae0c76a9c",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": true,
+        "name": "e.relmi@studenti.unisa.it",
+        "dname": "email-sender",
+        "x": 1350,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "dd63aa1fa4425478",
+        "type": "function",
+        "z": "221e456ae0c76a9c",
+        "name": "attempts-checker",
+        "func": "if (msg.payload !== \"1234\") {\n    let failedAttempts = flow.get('failedAttempts') || 0;\n    ++failedAttempts;\n\n    if (failedAttempts === 3) {\n        msg.triggerEmail = true;\n        failedAttempts = 0;\n    }\n\n    flow.set('failedAttempts', failedAttempts);\n} else {\n    flow.set('failedAttempts', 0);\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 440,
+        "wires": [
+            [
+                "e40a0ca8383af3f8",
+                "0e55127498f3738d"
+            ]
+        ]
+    },
+    {
+        "id": "7752bd771ce0fba6",
+        "type": "inject",
+        "z": "221e456ae0c76a9c",
+        "name": "email-trigger",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "alert-push",
+        "payload": "triggerEmail",
+        "payloadType": "str",
+        "x": 310,
+        "y": 320,
+        "wires": [
+            [
+                "dd63aa1fa4425478",
+                "e40a0ca8383af3f8"
+            ]
+        ],
+        "info": "# WARNING\n## VAULT SECURITY\nSomeone tried to enter the vault!\nCheck to be more secure."
+    },
+    {
+        "id": "e40a0ca8383af3f8",
+        "type": "switch",
+        "z": "221e456ae0c76a9c",
+        "name": "email-checker",
+        "property": "triggerEmail",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 660,
+        "y": 320,
+        "wires": [
+            [
+                "977de9e26831c6c2"
+            ]
+        ]
+    },
+    {
+        "id": "d4e865a7a232a7e9",
         "type": "change",
-        "z": "3f28c634ba510fe6",
-        "name": "Clear PIN Field",
+        "z": "221e456ae0c76a9c",
+        "name": "failedAttempts",
         "rules": [
             {
                 "t": "set",
-                "p": "payload",
+                "p": "failedAttempts",
                 "pt": "msg",
-                "to": "",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 540,
+        "wires": [
+            [
+                "dd63aa1fa4425478"
+            ]
+        ]
+    },
+    {
+        "id": "0e55127498f3738d",
+        "type": "debug",
+        "z": "221e456ae0c76a9c",
+        "name": "triggerEmail-debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "triggerEmail",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "977de9e26831c6c2",
+        "type": "function",
+        "z": "221e456ae0c76a9c",
+        "name": "email",
+        "func": "var now = new Date();\n\n// Funzione per ottenere il nome del mese in italiano\nfunction getMonthName(month) {\n    var monthNames = [\n        \"gennaio\", \"febbraio\", \"marzo\", \"aprile\", \"maggio\", \"giugno\",\n        \"luglio\", \"agosto\", \"settembre\", \"ottobre\", \"novembre\", \"dicembre\"\n    ];\n    return monthNames[month];\n}\n\nvar formattedTimestamp = now.getDate() + \" \" + getMonthName(now.getMonth()) + \" \" + now.getFullYear() + \" \" +\n    now.getHours() + \":\" + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();\n\nvar emailMessage = {\n    payload: {\n        body: `\n            <h1>WARNING!</h1>\n            <h2>VAULT SECURITY</h2>\n\n            <p>Someone tried to enter the vault!</p>\n\n            <p>Check to be more secure.</p>\n\n            <p>Timestamp: ${formattedTimestamp}</p>\n        `,\n        timestamp: now.toISOString()\n    }\n};\n\nreturn emailMessage;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 320,
+        "wires": [
+            [
+                "ebc72be80289c85a"
+            ]
+        ]
+    },
+    {
+        "id": "f0f0d2745b974eeb",
+        "type": "template",
+        "z": "221e456ae0c76a9c",
+        "name": "email-body",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{{payload.body}}}",
+        "output": "str",
+        "x": 1170,
+        "y": 320,
+        "wires": [
+            [
+                "c1ab3cc10e1031b3"
+            ]
+        ]
+    },
+    {
+        "id": "ebc72be80289c85a",
+        "type": "change",
+        "z": "221e456ae0c76a9c",
+        "name": "object-email",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "VAULT SECURITY",
                 "tot": "str"
             }
         ],
         "action": "",
         "property": "",
         "from": "",
+        "to": "",
         "reg": false,
-        "x": 390,
-        "y": 460,
+        "x": 990,
+        "y": 320,
         "wires": [
             [
-                "8dda61e78407467e"
+                "f0f0d2745b974eeb"
             ]
         ]
     },
